@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "614168951481",
+    "firebase_url": "https://test-bb630-default-rtdb.firebaseio.com",
+    "project_id": "test-bb630",
+    "storage_bucket": "test-bb630.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:614168951481:android:23b999d8911172bee0f968",
+        "android_client_info": {
+          "package_name": "com.teststudio.project1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBek2coRkE1meSZ9XpHblF1L6ThJkNnGTs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
