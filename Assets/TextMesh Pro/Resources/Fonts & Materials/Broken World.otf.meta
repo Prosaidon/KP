@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: 3358d9fcabc204f438b999d65b6d7133
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 300
+  forceTextureCase: -1
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Broken World
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: a432cccf0fe322c4c9e807a20e14c8b2, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 1
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
