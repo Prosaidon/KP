@@ -25,9 +25,7 @@ public class FirebaseController : MonoBehaviour
             var dependencyStatus = task.Result;
             if (dependencyStatus == Firebase.DependencyStatus.Available)
             {
-                InitializeFirebase();
-                //app = Firebase.FirebaseApp.DefaultInstance;
-                
+                InitializeFirebase();                
             }
             else
             {
@@ -108,6 +106,7 @@ public class FirebaseController : MonoBehaviour
 
     private void ShowNotificationMessage(string title, string message)
     {
+        Time.timeScale = 0;
         notif_Title_Text.text = "" + title;
         notif_Massage_Text.text = "" + message;
         notificationPanel.SetActive(true);
@@ -202,18 +201,6 @@ public class FirebaseController : MonoBehaviour
         });
     }
 
-    /*void HandleFirebaseException(AggregateException exception)
-    {
-        foreach (var e in exception.Flatten().InnerExceptions)
-        {
-            FirebaseException fe = e as FirebaseException;
-            if (fe != null)
-            {
-                Debug.LogError($"Error Code: {fe.ErrorCode}");
-            }
-            Debug.LogError($"Inner Exception: {e.Message}");
-        }
-    }*/
 
     void InitializeFirebase()
     {
@@ -325,32 +312,27 @@ public class FirebaseController : MonoBehaviour
 
     void forgetPasswordSubmit(string forgetPasswordEmail)
     {
-        auth.SendPasswordResetEmailAsync(forgetPasswordEmail).ContinueWithOnMainThread(task=>{
+        auth.SendPasswordResetEmailAsync(forgetPasswordEmail).ContinueWithOnMainThread(task => {
+            if (task.IsCanceled)
+            {
+                Debug.LogError("SendPasswordResetEmailAsync was canceled");
+            }
 
-                if(task.IsCanceled){
-                    Debug.LogError("SedPasswordResetEmailAsync was canceked");
-                }
-
-                if(task.IsFaulted)
+            if (task.IsFaulted)
+            {
+                foreach (Exception exception in task.Exception.Flatten().InnerExceptions)
                 {
-                    foreach(Exception exception in task.Exception.Flatten().InnerExceptions)
-                    {            
-
-                        Firebase.FirebaseException firebaseEx = exception as Firebase.FirebaseException;
-                        if (firebaseEx != null)
-                        {
-                            var errorCode = (AuthError)firebaseEx.ErrorCode;
-                            ShowNotificationMessage("Error",GetErrorMessage(errorCode));
-                        }
+                    Firebase.FirebaseException firebaseEx = exception as Firebase.FirebaseException;
+                    if (firebaseEx != null)
+                    {
+                        var errorCode = (AuthError)firebaseEx.ErrorCode;
+                        ShowNotificationMessage("Error", GetErrorMessage(errorCode));
                     }
                 }
-                ShowNotificationMessage("Alert", "Successfully Send Email For Reset Password");
-
-
-
-        }
-        );
-
+                return;
+            }
+            ShowNotificationMessage("Alert", "Successfully Send Email For Reset Password");
+        });
     }
 
 
