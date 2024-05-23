@@ -106,7 +106,6 @@ public class FirebaseController : MonoBehaviour
 
     private void ShowNotificationMessage(string title, string message)
     {
-        Time.timeScale = 0;
         notif_Title_Text.text = "" + title;
         notif_Massage_Text.text = "" + message;
         notificationPanel.SetActive(true);

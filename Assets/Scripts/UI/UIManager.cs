@@ -15,14 +15,18 @@ public class UIManager : MonoBehaviour
 
     public static int enemyCount = 3;
     AudioManager audioManager;
+    public static UIManager instance;
+
 
 
     private void Awake()
     {
+        Time.timeScale = 1;
         gameOverScreen.SetActive(false);
         pauseScreen.SetActive(false);
         winScreen.SetActive(false);
         audioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
+    
     }
     private void Start()
     {
@@ -53,7 +57,7 @@ public class UIManager : MonoBehaviour
     public void Restart()
     {
         Time.timeScale = 1;
-        SceneManager.LoadScene(2);
+        SceneManager.LoadScene(1);
     }
 
     //Main Menu
@@ -113,6 +117,7 @@ public class UIManager : MonoBehaviour
             if (uiManager != null)
             {
                 uiManager.ShowWinScreen();
+               
             }
         }
     }
@@ -140,9 +145,12 @@ public class UIManager : MonoBehaviour
     }
     #endregion
 
-    public void Boss()
+    public void Level2()
     {
         Time.timeScale = 1;
-        SceneManager.LoadScene("Boss");
+        SceneManager.LoadScene("Level2");
     }
+
+
+
 }

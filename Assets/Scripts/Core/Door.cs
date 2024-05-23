@@ -1,20 +1,24 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Door : MonoBehaviour
 {
-    /*
-    [SerializeField] private Transform previousRoom;
-    [SerializeField] private Transform nextRoom;
-    [SerializeField] private camera cam;
-
+    
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.tag == "Player")
+        if (collision.CompareTag("Player"))
         {
-            if (collision.transform.position.x < transform.position.x)
-                cam.MoveToNewRoom(nextRoom);
-            else
-                cam.MoveToNewRoom(previousRoom);
+            UnlockNewLevel();
         }
-    }*/
+   }
+
+   void UnlockNewLevel()
+    {
+        if (SceneManager.GetActiveScene().buildIndex >= PlayerPrefs.GetInt("ReachedIndex"))
+        {
+            PlayerPrefs.SetInt("ReachedIndex", SceneManager.GetActiveScene().buildIndex + 1);
+            PlayerPrefs.SetInt("UnlockedLevel", PlayerPrefs.GetInt("UnlockedLevel", 1) + 1);
+            PlayerPrefs.Save();
+        }
+    }
 }
