@@ -6,6 +6,7 @@ using Firebase;
 using Firebase.Auth;
 using System;
 using Firebase.Extensions;
+using UnityEngine.SceneManagement;
 
 public class FirebaseController : MonoBehaviour
 {
@@ -18,6 +19,8 @@ public class FirebaseController : MonoBehaviour
 
     bool isSignIn = false;
     bool isSigned = false;
+
+    public static FirebaseController instance;
 
     private void Start()
     {
@@ -57,10 +60,12 @@ public class FirebaseController : MonoBehaviour
 
     public void OpenProfilePanel()
     {
+        
         loginPanel.SetActive(false);
         signupPanel.SetActive(false);
         profilePanel.SetActive(true);
         forgetPasswordPanel.SetActive(false);
+
     }
 
     public void OpenForgetPassPanel()
@@ -196,17 +201,17 @@ public class FirebaseController : MonoBehaviour
             profileUserEmail_Text.text = "" + result.User.Email;
 
             OpenProfilePanel();
-            //isSignIn = true;
+            isSignIn = true;
         });
     }
 
 
     void InitializeFirebase()
     {
+        Debug.Log("Initializing Firebase...");
         auth = Firebase.Auth.FirebaseAuth.DefaultInstance;
         auth.StateChanged += AuthStateChanged;
         AuthStateChanged(this, null);
-
     }
 
     void AuthStateChanged(object sender, System.EventArgs eventArgs)
@@ -334,5 +339,5 @@ public class FirebaseController : MonoBehaviour
         });
     }
 
-
+    
 }
