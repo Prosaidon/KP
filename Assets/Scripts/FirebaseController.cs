@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Firebase;
+using Firebase.Database;
 using Firebase.Auth;
 using System;
 using Firebase.Extensions;
@@ -10,6 +11,9 @@ using UnityEngine.SceneManagement;
 
 public class FirebaseController : MonoBehaviour
 {
+    // Singleton instance
+     public static FirebaseController instance { get { return FirebaseManager.Instance.GetComponent<FirebaseController>(); } }
+
     public GameObject loginPanel, signupPanel, profilePanel, forgetPasswordPanel, notificationPanel;
     public InputField loginEmail, loginPassword, signupEmail, signupPassword, signupCPassword, signupUserName, forgetPassEmail;
     public Text notif_Title_Text, notif_Massage_Text, profileUserName_Text, profileUserEmail_Text;
@@ -20,7 +24,10 @@ public class FirebaseController : MonoBehaviour
     bool isSignIn = false;
     bool isSigned = false;
 
-    public static FirebaseController instance;
+    private void Awake()
+    {
+        InitializeFirebase();
+    }
 
     private void Start()
     {
@@ -28,18 +35,13 @@ public class FirebaseController : MonoBehaviour
             var dependencyStatus = task.Result;
             if (dependencyStatus == Firebase.DependencyStatus.Available)
             {
-                InitializeFirebase();                
+                InitializeFirebase();
             }
             else
             {
                 Debug.LogError($"Could not resolve all Firebase dependencies: {dependencyStatus}");
             }
         });
-    }
-
-    private void Awake()
-    {
-        InitializeFirebase();
     }
 
     public void OpenLoginPanel()
@@ -60,12 +62,10 @@ public class FirebaseController : MonoBehaviour
 
     public void OpenProfilePanel()
     {
-        
         loginPanel.SetActive(false);
         signupPanel.SetActive(false);
         profilePanel.SetActive(true);
         forgetPasswordPanel.SetActive(false);
-
     }
 
     public void OpenForgetPassPanel()
@@ -106,13 +106,12 @@ public class FirebaseController : MonoBehaviour
             return;
         }
         forgetPasswordSubmit(forgetPassEmail.text);
-        // SendPasswordResetEmail(forgetPassEmail.text);
     }
 
     private void ShowNotificationMessage(string title, string message)
     {
-        notif_Title_Text.text = "" + title;
-        notif_Massage_Text.text = "" + message;
+        notif_Title_Text.text = title;
+        notif_Massage_Text.text = message;
         notificationPanel.SetActive(true);
     }
 
@@ -128,10 +127,11 @@ public class FirebaseController : MonoBehaviour
         auth.SignOut();
         profileUserEmail_Text.text = "";
         profileUserName_Text.text = "";
+        PlayerPrefs.DeleteKey("UnlockedLevel");
         OpenLoginPanel();
     }
 
-    void CreateUser(string email, string password, string UserName)
+    void CreateUser(string email, string password, string userName)
     {
         auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
         {
@@ -143,26 +143,25 @@ public class FirebaseController : MonoBehaviour
             if (task.IsFaulted)
             {
                 Debug.LogError("CreateUserWithEmailAndPasswordAsync encountered an error: " + task.Exception);
-                
-                //Exception exception = task.Exception;
-                foreach(Exception exception in task.Exception.Flatten().InnerExceptions)
-                {            
-
+                foreach (Exception exception in task.Exception.Flatten().InnerExceptions)
+                {
                     Firebase.FirebaseException firebaseEx = exception as Firebase.FirebaseException;
                     if (firebaseEx != null)
                     {
                         var errorCode = (AuthError)firebaseEx.ErrorCode;
-                        ShowNotificationMessage("Error",GetErrorMessage(errorCode));
+                        ShowNotificationMessage("Error", GetErrorMessage(errorCode));
                     }
                 }
-                //HandleFirebaseException(task.Exception);
                 return;
             }
 
             Firebase.Auth.AuthResult result = task.Result;
-            Debug.LogFormat("Firebase user created successfully: {0} ({1})", result.User.DisplayName, result.User.UserId);
+            FirebaseUser newUser = result.User;
+            Debug.LogFormat("Firebase user created successfully: {0} ({1})", newUser.DisplayName, newUser.UserId);
 
-            UpdateUserProfile(UserName);
+            UpdateUserProfile(userName);
+            SaveUserDataToDatabase(newUser.UserId, email, userName);
+            
         });
     }
 
@@ -173,56 +172,58 @@ public class FirebaseController : MonoBehaviour
             if (task.IsCanceled)
             {
                 Debug.LogError("SignInWithEmailAndPasswordAsync was canceled.");
-
                 return;
             }
             if (task.IsFaulted)
             {
                 Debug.LogError("SignInWithEmailAndPasswordAsync encountered an error: " + task.Exception);
-                //HandleFirebaseException(task.Exception);
-                
-                foreach(Exception exception in task.Exception.Flatten().InnerExceptions)
-                {            
-
+                foreach (Exception exception in task.Exception.Flatten().InnerExceptions)
+                {
                     Firebase.FirebaseException firebaseEx = exception as Firebase.FirebaseException;
                     if (firebaseEx != null)
                     {
                         var errorCode = (AuthError)firebaseEx.ErrorCode;
-                        ShowNotificationMessage("Error",GetErrorMessage(errorCode));
+                        ShowNotificationMessage("Error", GetErrorMessage(errorCode));
                     }
                 }
                 return;
             }
 
             Firebase.Auth.AuthResult result = task.Result;
-            Debug.LogFormat("User signed in successfully: {0} ({1})", result.User.DisplayName, result.User.UserId);
+            FirebaseUser newUser = result.User;
+            Debug.LogFormat("User signed in successfully: {0} ({1})", newUser.DisplayName, newUser.UserId);
 
-            profileUserName_Text.text = "" + result.User.DisplayName;
-            profileUserEmail_Text.text = "" + result.User.Email;
+            profileUserName_Text.text = newUser.DisplayName ?? "Display Name Not Set";
+            profileUserEmail_Text.text = newUser.Email ?? "Email Not Set";
 
+            LoadUserDataFromDatabase(newUser.UserId);
             OpenProfilePanel();
-            isSignIn = true;
+
+            // Memuat data tingkat yang terbuka setelah pengguna berhasil masuk
+            LoadUserLevelFromDatabase(newUser.UserId);
         });
     }
 
-
     void InitializeFirebase()
     {
-        Debug.Log("Initializing Firebase...");
         auth = Firebase.Auth.FirebaseAuth.DefaultInstance;
         auth.StateChanged += AuthStateChanged;
+        // Menginisialisasi objek user di sini
+        user = auth.CurrentUser;
         AuthStateChanged(this, null);
     }
 
     void AuthStateChanged(object sender, System.EventArgs eventArgs)
     {
-        if (auth.CurrentUser != user)
+        // Periksa apakah auth.CurrentUser dan user tidak null
+        if (auth.CurrentUser != null && user != auth.CurrentUser)
         {
-            bool signedIn = user != auth.CurrentUser && auth.CurrentUser != null && auth.CurrentUser.IsValid();
+            bool signedIn = auth.CurrentUser != null && auth.CurrentUser.IsValid();
             if (!signedIn && user != null)
             {
                 Debug.Log("Signed out " + user.UserId);
             }
+            // Perbarui objek user
             user = auth.CurrentUser;
             if (signedIn)
             {
@@ -232,20 +233,24 @@ public class FirebaseController : MonoBehaviour
         }
     }
 
+
     void OnDestroy()
     {
-        auth.StateChanged -= AuthStateChanged;
-        auth = null;
+        if (auth != null)
+        {
+            auth.StateChanged -= AuthStateChanged;
+            auth = null;
+        }
     }
 
-    void UpdateUserProfile(string UserName)
+    void UpdateUserProfile(string userName)
     {
-        Firebase.Auth.FirebaseUser user = auth.CurrentUser;
+        FirebaseUser user = auth.CurrentUser;
         if (user != null)
         {
-            Firebase.Auth.UserProfile profile = new Firebase.Auth.UserProfile
+            UserProfile profile = new UserProfile
             {
-                DisplayName = UserName,
+                DisplayName = userName,
                 PhotoUrl = new System.Uri("https://fastly.picsum.photos/id/1/200/300.jpg?hmac=jH5bDkLr6Tgy3oAg5khKCHeunZMHq0ehBZr6vGifPLY"),
             };
             user.UpdateUserProfileAsync(profile).ContinueWithOnMainThread(task =>
@@ -262,12 +267,10 @@ public class FirebaseController : MonoBehaviour
                 }
 
                 Debug.Log("User profile updated successfully.");
-
                 ShowNotificationMessage("Alert", "Account Successfully Created");
             });
         }
     }
-
 
     void Update()
     {
@@ -276,7 +279,6 @@ public class FirebaseController : MonoBehaviour
             isSigned = true;
             profileUserName_Text.text = user.DisplayName != null ? user.DisplayName : "Display Name Not Set";
             profileUserEmail_Text.text = user.Email != null ? user.Email : "Email Not Set";
-
             OpenProfilePanel();
         }
     }
@@ -316,12 +318,13 @@ public class FirebaseController : MonoBehaviour
 
     void forgetPasswordSubmit(string forgetPasswordEmail)
     {
-        auth.SendPasswordResetEmailAsync(forgetPasswordEmail).ContinueWithOnMainThread(task => {
+        auth.SendPasswordResetEmailAsync(forgetPasswordEmail).ContinueWithOnMainThread(task =>
+        {
             if (task.IsCanceled)
             {
-                Debug.LogError("SendPasswordResetEmailAsync was canceled");
+                Debug.LogError("SendPasswordResetEmailAsync was canceled.");
+                return;
             }
-
             if (task.IsFaulted)
             {
                 foreach (Exception exception in task.Exception.Flatten().InnerExceptions)
@@ -335,9 +338,130 @@ public class FirebaseController : MonoBehaviour
                 }
                 return;
             }
-            ShowNotificationMessage("Alert", "Successfully Send Email For Reset Password");
+            ShowNotificationMessage("Alert", "Successfully Sent Email For Reset Password");
         });
     }
 
-    
+    void SaveUserDataToDatabase(string userId, string email, string userName)
+    {
+        DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
+        User user = new User(userName, email);
+        reference.Child("Users").Child(userId).SetRawJsonValueAsync(JsonUtility.ToJson(user)).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted)
+            {
+                Debug.Log("User data saved to database successfully.");
+            }
+            else
+            {
+                Debug.LogError("Failed to save user data to database: " + task.Exception);
+            }
+        });
+    }
+
+    public class User
+    {
+        public string username;
+        public string email;
+
+        public User(string username, string email)
+        {
+            this.username = username;
+            this.email = email;
+        }
+    }
+
+    void LoadUserDataFromDatabase(string userId)
+    {
+        DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
+        reference.Child("Users").Child(userId).GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted)
+            {
+                DataSnapshot snapshot = task.Result;
+                if (snapshot.Exists)
+                {
+                    string json = snapshot.GetRawJsonValue();
+                    User user = JsonUtility.FromJson<User>(json);
+
+                    profileUserName_Text.text = user.username;
+                    profileUserEmail_Text.text = user.email;
+                }
+                else
+                {
+                    Debug.LogError("No user data found for userId: " + userId);
+                }
+            }
+            else
+            {
+                Debug.LogError("Failed to load user data from database: " + task.Exception);
+            }
+        });
+    }
+
+    void LoadUserLevelFromDatabase(string userId)
+    {
+        DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
+        reference.Child("Users").Child(userId).Child("unlockedLevel").GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted)
+            {
+                DataSnapshot snapshot = task.Result;
+                if (snapshot.Exists)
+                {
+                    int unlockedLevel = int.Parse(snapshot.Value.ToString());
+                    // Simpan data tingkat yang terbuka di PlayerPrefs
+                    PlayerPrefs.SetInt("UnlockedLevel", unlockedLevel);
+                    Debug.Log("User level data loaded from database: " + unlockedLevel);
+                }
+                else
+                {
+                    Debug.LogError("No user level data found for userId: " + userId);
+                    // Jika tidak ada data level, defaultkan ke level 1
+                    PlayerPrefs.SetInt("UnlockedLevel", 1);
+                    Debug.Log("Defaulting to level 1.");
+                }
+            }
+            else
+            {
+                Debug.LogError("Failed to load user level data from database: " + task.Exception);
+            }
+        });
+    }
+
+    public void SaveUserLevelToDatabase(int unlockedLevel)
+    {
+        if (user != null)
+        {
+            string userId = user.UserId;
+            DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
+            reference.Child("Users").Child(userId).Child("unlockedLevel").SetValueAsync(unlockedLevel).ContinueWithOnMainThread(task =>
+            {
+                if (task.IsCompleted)
+                {
+                    Debug.Log("User level data saved to database successfully.");
+                }
+                else
+                {
+                    Debug.LogError("Failed to save user level data to database: " + task.Exception);
+                }
+            });
+        }
+        else
+        {
+            Debug.LogError("User is not signed in.");
+        }
+    }
+
+    public void OnSaveButtonClicked()
+    {
+        // Ambil nilai tingkat yang terbuka dari suatu sumber (misalnya, PlayerPrefs)
+        int unlockedLevel = PlayerPrefs.GetInt("UnlockedLevel", 1); // 1 adalah nilai default jika data tidak ditemukan
+
+        // Panggil metode untuk menyimpan data tingkat yang terbuka ke database Firebase
+        SaveUserLevelToDatabase(unlockedLevel);
+
+        // Tampilkan pesan notifikasi atau feedback kepada pengguna
+        ShowNotificationMessage("Success", "Level progress saved successfully.");
+    }
 }

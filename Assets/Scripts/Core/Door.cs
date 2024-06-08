@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class Door : MonoBehaviour
 {
-    private void OnTriggerEnter2D(Collider2D collision)
+    /*private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
         {
@@ -20,5 +20,5 @@ public class Door : MonoBehaviour
             PlayerPrefs.SetInt("UnlockedLevel", PlayerPrefs.GetInt("UnlokedLevel",1) + 1);
             PlayerPrefs.Save();
         }
-    }
+    }*/
 }

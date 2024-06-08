@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -30,10 +28,24 @@ public class LevelMenu : MonoBehaviour
         }
     }
 
-    public void OpenLevel(int LevelId)
+    public void OpenLevel(int levelId)
     {
-        string LevelName = "Level" + LevelId;
-        SceneManager.LoadScene(LevelName);
+        string levelName = "Level" + levelId;
+        // Cek apakah pemain sudah menyelesaikan level sebelumnya sebelum membuka level berikutnya
+        int previousLevel = levelId - 1;
+        if (previousLevel > 0 && previousLevel <= PlayerPrefs.GetInt("UnlockedLevel", 1))
+        {
+            SceneManager.LoadScene(levelName);
+        }
+        else if (previousLevel > 0)
+        {
+            Debug.Log("Anda harus menyelesaikan level sebelumnya terlebih dahulu!");
+            // Mungkin tambahkan pesan kepada pemain bahwa mereka harus menyelesaikan level sebelumnya
+        }
+        else
+        {
+            SceneManager.LoadScene(levelName);
+        }
     }
 
     void ButtonsToArray()

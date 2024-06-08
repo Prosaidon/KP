@@ -12,12 +12,12 @@ EditorBuildSettings:
     path: Assets/Scenes/Mulai.unity
     guid: c2296c3085000d643ad4f9fac968868e
   - enabled: 1
+    path: Assets/Scenes/FirebaseAut.unity
+    guid: 681f80b576e5b4e42b531c9b939f03dc
+  - enabled: 1
     path: Assets/Scenes/Level1.unity
     guid: 2cda990e2423bbf4892e6590ba056729
   - enabled: 1
     path: Assets/Scenes/Level2.unity
     guid: 24f1ca7d67c724e469e38a560d1df9db
-  - enabled: 1
-    path: Assets/Scenes/FirebaseAut.unity
-    guid: 681f80b576e5b4e42b531c9b939f03dc
   m_configObjects: {}

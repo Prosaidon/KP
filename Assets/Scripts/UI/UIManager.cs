@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
 {
-    [Header ("Game Over")]
+    [Header("Game Over")]
     [SerializeField] private GameObject gameOverScreen;
     //[SerializeField] private AudioClip gameOverSound;
 
@@ -17,8 +17,6 @@ public class UIManager : MonoBehaviour
     AudioManager audioManager;
     public static UIManager instance;
 
-
-
     private void Awake()
     {
         Time.timeScale = 1;
@@ -26,13 +24,15 @@ public class UIManager : MonoBehaviour
         pauseScreen.SetActive(false);
         winScreen.SetActive(false);
         audioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
-    
+        
+        InitializePlayerPrefs();
     }
+
     private void Start()
     {
         enemyCount = GameObject.FindGameObjectsWithTag("Enemy").Length;
-        
     }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape) && !gameOverScreen.activeInHierarchy && !winScreen.activeInHierarchy) // Tambahkan kondisi untuk memeriksa layar kalah atau menang sedang aktif atau tidak
@@ -64,7 +64,7 @@ public class UIManager : MonoBehaviour
     public void MainMenu()
     {
         SceneManager.LoadScene(0);
-        Time.timeScale = 0;
+        Time.timeScale = 1;
     }
 
     //Quit game/exit play mode if in Editor
@@ -90,7 +90,9 @@ public class UIManager : MonoBehaviour
         {
             Time.timeScale = 0;
             audioManager.PauseBackgroundMusic();
-        }else{
+        }
+        else
+        {
             Time.timeScale = 1;
             audioManager.ResumeBackgroundMusic();
         }
@@ -108,8 +110,8 @@ public class UIManager : MonoBehaviour
     #region Win
     public void EnemyKilled()
     {
-         enemyCount--; // Mengurangi jumlah musuh yang tersisa
-         //Time.timeScale = 0;
+        enemyCount--; // Mengurangi jumlah musuh yang tersisa
+        //Time.timeScale = 0;
         if (enemyCount <= 0)
         {
             // Panggil UIManager untuk menampilkan layar kemenangan
@@ -117,19 +119,37 @@ public class UIManager : MonoBehaviour
             if (uiManager != null)
             {
                 uiManager.ShowWinScreen();
-               
             }
         }
     }
-    
+
     public void ShowWinScreen()
     {
-    
-            winScreen.SetActive(true);
-            audioManager.PlaySFX(audioManager.Win);
-            audioManager.PauseBackgroundMusic();
-            Time.timeScale = 0;
-        
+        winScreen.SetActive(true);
+        audioManager.PlaySFX(audioManager.Win);
+        audioManager.PauseBackgroundMusic();
+        Time.timeScale = 0;
+
+        UnlockNextLevel();
+    }
+
+    private void UnlockNextLevel()
+    {
+        int currentLevel = SceneManager.GetActiveScene().buildIndex;
+        int unlockedLevel = PlayerPrefs.GetInt("UnlockedLevel", 1);
+
+        if (currentLevel >= unlockedLevel)
+        {
+            PlayerPrefs.SetInt("UnlockedLevel", currentLevel + 1);
+        }
+    }
+
+    private void InitializePlayerPrefs()
+    {
+        if (!PlayerPrefs.HasKey("UnlockedLevel"))
+        {
+            PlayerPrefs.SetInt("UnlockedLevel", 1); // Set default level 1 unlocked
+        }
     }
 
     public void RestartGame()
@@ -141,7 +161,6 @@ public class UIManager : MonoBehaviour
     public void QuitGame()
     {
         Application.Quit();
-        
     }
     #endregion
 
@@ -150,7 +169,4 @@ public class UIManager : MonoBehaviour
         Time.timeScale = 1;
         SceneManager.LoadScene("Level2");
     }
-
-
-
 }
