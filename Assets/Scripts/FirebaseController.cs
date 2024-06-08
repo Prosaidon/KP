@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 public class FirebaseController : MonoBehaviour
 {
     // Singleton instance
-     public static FirebaseController instance { get { return FirebaseManager.Instance.GetComponent<FirebaseController>(); } }
+    public static FirebaseController instance { get { return FirebaseManager.Instance.GetComponent<FirebaseController>(); } }
 
     public GameObject loginPanel, signupPanel, profilePanel, forgetPasswordPanel, notificationPanel;
     public InputField loginEmail, loginPassword, signupEmail, signupPassword, signupCPassword, signupUserName, forgetPassEmail;
@@ -161,7 +161,9 @@ public class FirebaseController : MonoBehaviour
 
             UpdateUserProfile(userName);
             SaveUserDataToDatabase(newUser.UserId, email, userName);
-            
+
+            // Set default unlockedLevel to 1
+            SaveUserLevelToDatabase(1);
         });
     }
 
@@ -232,7 +234,6 @@ public class FirebaseController : MonoBehaviour
             }
         }
     }
-
 
     void OnDestroy()
     {
@@ -465,3 +466,4 @@ public class FirebaseController : MonoBehaviour
         ShowNotificationMessage("Success", "Level progress saved successfully.");
     }
 }
+
