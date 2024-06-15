@@ -54,7 +54,12 @@ public class UIManager : MonoBehaviour
     }
 
     //Restart level
-    public void Restart()
+    public void RestartLevel2()
+    {
+        Time.timeScale = 1;
+        SceneManager.LoadScene(2);
+    }
+    public void RestartLevel1()
     {
         Time.timeScale = 1;
         SceneManager.LoadScene(1);

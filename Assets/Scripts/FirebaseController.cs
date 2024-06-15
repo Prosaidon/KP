@@ -32,16 +32,17 @@ public class FirebaseController : MonoBehaviour
     private void Start()
     {
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task => {
-            var dependencyStatus = task.Result;
-            if (dependencyStatus == Firebase.DependencyStatus.Available)
-            {
-                InitializeFirebase();
-            }
-            else
-            {
-                Debug.LogError($"Could not resolve all Firebase dependencies: {dependencyStatus}");
-            }
-        });
+        var dependencyStatus = task.Result;
+        if (dependencyStatus == Firebase.DependencyStatus.Available)
+        {
+            InitializeFirebase();
+            LoadUserDataFromPrefs();
+        }
+        else
+        {
+            Debug.LogError($"Could not resolve all Firebase dependencies: {dependencyStatus}");
+        }
+    });
     }
 
     public void OpenLoginPanel()
@@ -199,12 +200,14 @@ public class FirebaseController : MonoBehaviour
             profileUserEmail_Text.text = newUser.Email ?? "Email Not Set";
 
             LoadUserDataFromDatabase(newUser.UserId);
+            SaveUserDataToPrefs(newUser.DisplayName, newUser.Email);  // Save data to PlayerPrefs
             OpenProfilePanel();
 
             // Memuat data tingkat yang terbuka setelah pengguna berhasil masuk
             LoadUserLevelFromDatabase(newUser.UserId);
         });
     }
+
 
     void InitializeFirebase()
     {
@@ -456,14 +459,48 @@ public class FirebaseController : MonoBehaviour
 
     public void OnSaveButtonClicked()
     {
-        // Ambil nilai tingkat yang terbuka dari suatu sumber (misalnya, PlayerPrefs)
-        int unlockedLevel = PlayerPrefs.GetInt("UnlockedLevel", 1); // 1 adalah nilai default jika data tidak ditemukan
+        // Check if the user is logged in
+        if (user != null)
+        {
+            // Ambil nilai tingkat yang terbuka dari suatu sumber (misalnya, PlayerPrefs)
+            int unlockedLevel = PlayerPrefs.GetInt("UnlockedLevel", 1); // 1 adalah nilai default jika data tidak ditemukan
 
-        // Panggil metode untuk menyimpan data tingkat yang terbuka ke database Firebase
-        SaveUserLevelToDatabase(unlockedLevel);
+            // Panggil metode untuk menyimpan data tingkat yang terbuka ke database Firebase
+            SaveUserLevelToDatabase(unlockedLevel);
 
-        // Tampilkan pesan notifikasi atau feedback kepada pengguna
-        ShowNotificationMessage("Success", "Level progress saved successfully.");
+            // Tampilkan pesan notifikasi atau feedback kepada pengguna
+            ShowNotificationMessage("Success", "Level progress saved successfully.");
+        }
+        else
+        {
+            // Tampilkan pesan notifikasi jika pengguna belum login
+            ShowNotificationMessage("Error", "You must be logged in to save your progress.");
+        }
+    }
+
+    private void LoadUserDataFromPrefs()
+    {
+        if (PlayerPrefs.HasKey("UserName") && PlayerPrefs.HasKey("UserEmail"))
+        {
+            string userName = PlayerPrefs.GetString("UserName");
+            string userEmail = PlayerPrefs.GetString("UserEmail");
+
+            profileUserName_Text.text = userName;
+            profileUserEmail_Text.text = userEmail;
+
+            OpenProfilePanel();
+        }
+        else
+        {
+            OpenLoginPanel();
+        }
+    }
+
+    private void SaveUserDataToPrefs(string userName, string userEmail)
+    {
+        PlayerPrefs.SetString("UserName", userName);
+        PlayerPrefs.SetString("UserEmail", userEmail);
+        PlayerPrefs.Save();
     }
 }
 

@@ -6,8 +6,8 @@ public class Healtbar : MonoBehaviour
     [SerializeField] private Image totalhealthBar;
     [SerializeField] private Image currentHealthBar;
 
-    private float hp2 = 10f;
-    float BossHealth = 10f;
+    private float hp2 = 20f;
+    float BossHealth = 20f;
 
     private void Update()
     {
@@ -15,7 +15,7 @@ public class Healtbar : MonoBehaviour
     }
     public void Bar(float hp)
     {
-        currentHealthBar.fillAmount = hp / 10;
+        currentHealthBar.fillAmount = hp / 20;
         BossHealth = hp;
     }
 
@@ -24,6 +24,6 @@ public class Healtbar : MonoBehaviour
         if (hp < hp2)
             hp2 -= 1 * Time.deltaTime;
 
-        totalhealthBar.fillAmount = hp2 / 10;
+        totalhealthBar.fillAmount = hp2 / 20;
     }
 }
