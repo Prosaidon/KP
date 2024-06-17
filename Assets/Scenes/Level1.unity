@@ -18613,12 +18613,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   textComponent: {fileID: 1291086047}
   lines:
-  - The defeat of the pandhawa and the kurawa while playing dice resulted in the
-    pandhawa having to be punished, namely going into exile in Wiratha Country and
-    being prohibited from appearing in front of the kurawa.
-  - Long story short, during the Baratayudha war, Arjuna appeared in front of Karna
-    and his soldiers. With alacrity and firm attitude, Karna Basudewa ordered his
-    soldiers to attack Arjuna.
+  - In the midst of a city full of commotion, in a metropolis devastated by war,
+    Jeck, an experienced secret agent, stands tall. The tense atmosphere was overlooked
+    in the streets, where people gathered anxiously. Through the communicator, Jeck
+    receives a report that a terrorist group has managed to infiltrate the government
+    and is planning to overthrow it. Without hesitation, Jeck planned a counterattack.
+    With weapons in hand and skilled combat skills, he enters a heavily guarded government
+    compound, ready to face the enemy in a thrilling battle to save the country from
+    looming destruction.
   textSpeed: 0.1
 --- !u!1 &1186378113
 GameObject:
@@ -21155,7 +21157,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 464}
   m_SizeDelta: {x: 1500, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1291086047
